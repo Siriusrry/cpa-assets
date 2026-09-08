@@ -1,0 +1,84 @@
+name: Update and release management HTML
+
+on:
+  schedule:
+    # Every day at 09:23 Asia/Shanghai. Take one latest-stable snapshot per run.
+    - cron: '23 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: management-release
+  cancel-in-progress: false
+
+jobs:
+  maintenance:
+    name: Maintain scheduled activity
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+      - name: Record maintenance checkpoint every 25 days
+        run: python3 scripts/keepalive.py
+
+  build:
+    name: Apply patch, verify and publish
+    needs: maintenance
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Select only the latest official stable release
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: python3 scripts/pipeline.py plan --repo "$REPOSITORY"
+      - name: Prepare exact source and apply customization
+        if: steps.plan.outputs.build == 'true'
+        run: python3 scripts/pipeline.py prepare
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        if: steps.plan.outputs.build == 'true'
+        with:
+          node-version: '24'
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        if: steps.plan.outputs.build == 'true'
+        with:
+          bun-version: ${{ steps.plan.outputs.bun }}
+      - name: Install locked upstream dependencies
+        if: steps.plan.outputs.build == 'true'
+        working-directory: .work/source
+        run: bun install --frozen-lockfile
+      - name: Test, lint, type-check and build
+        if: steps.plan.outputs.build == 'true'
+        working-directory: .work/source
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+        run: bun run verify
+      - name: Package single HTML, source and checksums
+        if: steps.plan.outputs.build == 'true'
+        run: python3 scripts/pipeline.py package
+      - name: Publish only after all checks pass
+        if: steps.plan.outputs.build == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/pipeline.py publish
+      - name: Summarize selected version
+        if: success()
+        env:
+          VERSION: ${{ steps.plan.outputs.version }}
+          BUILT: ${{ steps.plan.outputs.build }}
+        run: |
+          echo "Selected version: $VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "New build required: $BUILT" >> "$GITHUB_STEP_SUMMARY"

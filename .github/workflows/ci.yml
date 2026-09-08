@@ -1,0 +1,17 @@
+name: Pipeline syntax
+on:
+  push:
+    branches: [main]
+    paths: ['scripts/**', '.github/workflows/**']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: python3 -m py_compile scripts/pipeline.py scripts/keepalive.py
