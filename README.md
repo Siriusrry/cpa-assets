@@ -1,6 +1,6 @@
 # CPA Management Center — Siriusrry
 
-Personal builds of [CLI Proxy API Management Center](https://github.com/router-for-me/Cli-Proxy-API-Management-Center), retaining the official single-file `management.html` delivery format. This repository maintains a small source patch and the build/release pipeline; it is not the CPA Go backend.
+Personal builds of [CLI Proxy API Management Center](https://github.com/router-for-me/Cli-Proxy-API-Management-Center), retaining the official single-file `management.html` delivery format. This repository maintains two small source patches and the build/release pipeline; it is not the CPA Go backend.
 
 [Latest release](https://github.com/Siriusrry/cpa-management-center/releases/latest) · [Daily workflow](https://github.com/Siriusrry/cpa-management-center/actions/workflows/update.yml)
 
@@ -8,6 +8,8 @@ Personal builds of [CLI Proxy API Management Center](https://github.com/router-f
 
 - Codex quota cards show the authentication file's priority immediately after the manual reset count, using the authentication-file badge appearance.
 - Zero and negative safe integers are displayed; absent/invalid values are hidden. Narrow cards wrap naturally. Other providers and authentication-card quota bodies retain their existing behavior.
+- Quota-card titles and quota-window labels/tooltips show the email using the authentication page's identity helper; missing email displays `—`. Full filenames stay internal for requests and cache keys.
+- Both priority and email display are maintained on every upstream update.
 - Management Center version ends with `-Siriusrry`, e.g. `v1.22.14-Siriusrry`.
 
 ## Daily update contract
@@ -35,7 +37,7 @@ The maintenance job needs `contents: write`. Removing that permission or blockin
 - Run **Actions → Update and release management HTML → Run workflow** to check now.
 - On a conflict, inspect the selected upstream version and failing patch in the run log. Adapt the patch on that exact upstream source and run the workflow again.
 - If changing build inputs for an already published upstream version, increment `revision` in `build-config.json`. Revision 2 produces `v1.22.14-r2-Siriusrry`. Published attachments are immutable; only incomplete drafts can be retried.
-- If upstream incorporates priority itself, remove/adapt the patch after reviewing behavior.
+- If upstream incorporates either customization itself, remove/adapt the patch after reviewing behavior.
 - If upstream changes its declared Bun version, the workflow intentionally stops until `build-config.json` is reviewed.
 - `build-info.json` records official tag/commit, pipeline commit and build-input fingerprint. `source.tar.gz` contains the corresponding patched source, including original licensing.
 
