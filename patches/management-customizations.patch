@@ -1,5 +1,32 @@
+diff --git a/src/features/quota/QuotaPage.tsx b/src/features/quota/QuotaPage.tsx
+index f1c07f32d20522f41341b647a3421448af4b1979..60a5bb380b50235beabd13361b6785df9aad642e 100644
+--- a/src/features/quota/QuotaPage.tsx
++++ b/src/features/quota/QuotaPage.tsx
+@@ -51,18 +51,16 @@ import styles from './QuotaPage.module.scss';
+ const TAB_IDS: string[] = ['all', ...QUOTA_TAB_ORDER];
+ const SKELETON_CARD_COUNT = 6;
+ 
+-/**
+- * 时间线泳道名 = 卡片标题，两者必须一致。卡片显示的就是文件名，所以这里是恒等。
+- * 提到模块级是为了引用稳定 —— 它进了泳道 memo 的依赖数组。
+- */
+-const displayNameFor = (name: string) => name;
+-
+ export function QuotaPage() {
+   const { t } = useTranslation();
+   const connectionStatus = useAuthStore((state) => state.connectionStatus);
+   const resolvedTheme: ResolvedTheme = useThemeStore((state) => state.resolvedTheme);
+ 
+   const [files, setFiles] = useState<AuthFileItem[]>([]);
++  const displayNameFor = useCallback(
++    (name: string) => files.find((file) => file.name === name)!.email!,
++    [files]
++  );
+   const [loading, setLoading] = useState(true);
+   const [error, setError] = useState('');
+   const [tab, setTab] = useState<QuotaTabId>(() => readQuotaUiState()?.tab ?? 'all');
 diff --git a/src/features/quota/components/QuotaCard.module.scss b/src/features/quota/components/QuotaCard.module.scss
-index c80841f..20a9349 100644
+index c80841fe37e6a7a2e129221fdd095fc99b1b5acc..20a9349d679a75d80161dada6ef68258ea7ccd8c 100644
 --- a/src/features/quota/components/QuotaCard.module.scss
 +++ b/src/features/quota/components/QuotaCard.module.scss
 @@ -308,3 +308,28 @@
@@ -32,7 +59,7 @@ index c80841f..20a9349 100644
 +  opacity: 0.78;
 +}
 diff --git a/src/features/quota/components/QuotaCard.tsx b/src/features/quota/components/QuotaCard.tsx
-index 0c5303a..aef3665 100644
+index 0c5303ab129c7c84994df40750498e9a4cc6ee5a..ab069c24675cb4964933c574e1517d69b49bc5cb 100644
 --- a/src/features/quota/components/QuotaCard.tsx
 +++ b/src/features/quota/components/QuotaCard.tsx
 @@ -53,6 +53,7 @@ export function QuotaCard(props: QuotaCardProps) {
@@ -43,6 +70,15 @@ index 0c5303a..aef3665 100644
  
    // 挂载时捕获一次延迟：后续 props 变 null 不影响本卡（React 19 禁渲染期读 ref）
    const [mountEntranceDelayMs] = useState<number | null>(entranceDelayMs ?? null);
+@@ -98,7 +99,7 @@ export function QuotaCard(props: QuotaCardProps) {
+           )}
+         </span>
+         <span className={styles.fileName} title={file.name}>
+-          {file.name}
++          {file.email}
+         </span>
+       </header>
+ 
 @@ -128,7 +129,18 @@ export function QuotaCard(props: QuotaCardProps) {
              {t(`${adapter.i18nPrefix}.load_failed`, { message: errorMessage })}
            </div>
@@ -63,8 +99,30 @@ index 0c5303a..aef3665 100644
          ) : (
            <div className={styles.idleHint}>{t(`${adapter.i18nPrefix}.idle`)}</div>
          )}
+diff --git a/src/features/quota/components/QuotaTimeline.tsx b/src/features/quota/components/QuotaTimeline.tsx
+index 99147773434d95cc44fc17f5e3e8a89d86f5f5ab..38ec75e05888f9ec2540944e54e8f72db8723381 100644
+--- a/src/features/quota/components/QuotaTimeline.tsx
++++ b/src/features/quota/components/QuotaTimeline.tsx
+@@ -345,7 +345,7 @@ function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneP
+       <div className={styles.laneHead}>
+         <div className={styles.laneTop}>
+           <span className={styles.laneDot} />
+-          <span className={styles.laneName} title={lane.displayName}>
++          <span className={styles.laneName} title={lane.name}>
+             {lane.displayName}
+           </span>
+           {periodLabel && <span className={styles.lanePeriod}>{periodLabel}</span>}
+@@ -395,7 +395,7 @@ function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneP
+                 key={window.startMs}
+                 className={`${styles.window} ${styles[`window${capitalize(window.state)}`]}`}
+                 style={{ left: `${window.leftPercent}%`, width: `${window.widthPercent}%` }}
+-                title={`${lane.displayName}\n${formatDay(window.startMs)} ${formatTime(
++                title={`${lane.name}\n${formatDay(window.startMs)} ${formatTime(
+                   window.startMs
+                 )} → ${formatDay(window.endMs)} ${formatTime(window.endMs)}${
+                   window.remaining !== null ? `\n${window.remaining}% remaining` : ''
 diff --git a/src/features/quota/providers/codex/CodexQuotaBody.tsx b/src/features/quota/providers/codex/CodexQuotaBody.tsx
-index 8e8d44a..913720c 100644
+index 8e8d44a8fc8ea23244033abb86c09a7d735780ba..913720c7f1c99a1686b6543aa48354caa18219ec 100644
 --- a/src/features/quota/providers/codex/CodexQuotaBody.tsx
 +++ b/src/features/quota/providers/codex/CodexQuotaBody.tsx
 @@ -31,7 +31,7 @@ const getPlanValueClass = (planType: string | null, classes: QuotaClassMap): str
@@ -97,7 +155,7 @@ index 8e8d44a..913720c 100644
        )}
        {rateLimitResetCredits.length > 0 ? (
 diff --git a/src/features/quota/types.ts b/src/features/quota/types.ts
-index 6458f56..acef876 100644
+index 6458f563e6f1f921118e46fd4e64f6f681364aa1..acef8764a66117decf94434d777de7b67759ed54 100644
 --- a/src/features/quota/types.ts
 +++ b/src/features/quota/types.ts
 @@ -1,3 +1,5 @@
