@@ -1,6 +1,6 @@
 # CPA Management Center — Siriusrry
 
-Personal builds of [CLI Proxy API Management Center](https://github.com/router-for-me/Cli-Proxy-API-Management-Center), retaining the official single-file `management.html` delivery format. This repository maintains one small source patch for two customizations and the build/release pipeline; it is not the CPA Go backend.
+Personal builds of [CLI Proxy API Management Center](https://github.com/router-for-me/Cli-Proxy-API-Management-Center), retaining the official single-file `management.html` delivery format. This repository maintains one small source patch for the maintained customizations and the build/release pipeline; it is not the CPA Go backend.
 
 [Latest release](https://github.com/Siriusrry/cpa-management-center/releases/latest) · [Daily workflow](https://github.com/Siriusrry/cpa-management-center/actions/workflows/update.yml)
 
@@ -9,7 +9,8 @@ Personal builds of [CLI Proxy API Management Center](https://github.com/router-f
 - Codex quota cards show the authentication file's priority immediately after the manual reset count, using the authentication-file badge appearance.
 - Zero and negative safe integers are displayed; absent/invalid values are hidden. Narrow cards wrap naturally. Other providers and authentication-card quota bodies retain their existing behavior.
 - Quota-card titles and quota-window labels display the provided email directly; hovering shows the full filename. No extra missing-email fallback is introduced. File identity for requests and caches is unchanged.
-- Both priority and email display are maintained on every upstream update.
+- Default quota sorting keeps provider groups in their existing order, sorts each group by ascending priority, and preserves the original order for equal priorities. The quota-window list follows the same sorted page entries.
+- Priority badges, email labels and default ordering are maintained on every upstream update.
 - Management Center version ends with `-Siriusrry`, e.g. `v1.22.14-Siriusrry`.
 
 ## Daily update contract
@@ -37,7 +38,7 @@ The maintenance job needs `contents: write`. Removing that permission or blockin
 - Run **Actions → Update and release management HTML → Run workflow** to check now.
 - On a real three-way conflict, inspect the selected upstream version and conflicting file. Adapt the small patch, regenerate it with `git diff --full-index` against an official commit, update `patch_base`, and run the workflow again.
 - Version and Release tag are always `<official-version>-Siriusrry`. Changed build inputs trigger a rebuild of the same version after validation; publication temporarily stages it as a draft and restores previous attachments/tag if publication fails. Exact build identity lives in `build-info.json`, without an added revision suffix.
-- If upstream incorporates either customization itself, remove/adapt the patch after reviewing behavior.
+- If upstream incorporates a customization itself, remove/adapt the patch after reviewing behavior.
 - If upstream changes its declared Bun version, the workflow intentionally stops until `build-config.json` is reviewed.
 - `build-info.json` records official tag/commit, pipeline commit and build-input fingerprint. `source.tar.gz` contains the corresponding patched source, including original licensing.
 

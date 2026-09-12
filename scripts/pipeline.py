@@ -141,7 +141,7 @@ def package():
     (ROOT / '.work/release-notes.md').write_text(
         f"Based on [{plan['upstream_tag']}](https://github.com/{plan['upstream']}/releases/tag/{plan['upstream_tag']}) "
         f"(`{plan['upstream_sha']}`).\n\n"
-        'Adds authentication priority after the Codex reset count, email quota-card/window labels with full filenames on hover, and a Siriusrry version suffix.\n\n'
+        'Adds authentication priority after the Codex reset count, email quota-card/window labels with full filenames on hover, provider-grouped default ordering with ascending priority and stable ties, and a Siriusrry version suffix.\n\n'
         'Validation: the official upstream test, lint and TypeScript/build workflow; '
         'single-file HTML/version checks and release attachment round-trip verification.\n\n'
         f"Pipeline source: `{plan['pipeline_sha']}`. Build metadata and corresponding patched source attached.\n")

@@ -121,6 +121,48 @@ index 99147773434d95cc44fc17f5e3e8a89d86f5f5ab..38ec75e05888f9ec2540944e54e8f72d
                    window.startMs
                  )} → ${formatDay(window.endMs)} ${formatTime(window.endMs)}${
                    window.remaining !== null ? `\n${window.remaining}% remaining` : ''
+diff --git a/src/features/quota/constants.ts b/src/features/quota/constants.ts
+index ca29a05131a2c1709e77ca3549e9c126d85da0d8..a3c61f824c70cab198faebd287279de770d1ce0d 100644
+--- a/src/features/quota/constants.ts
++++ b/src/features/quota/constants.ts
+@@ -14,7 +14,7 @@ export type QuotaTabId = 'all' | QuotaProviderType;
+ /** 页级分页固定 20/页，同时把「刷新全部」的上游并发限制在 20。 */
+ export const QUOTA_PAGE_SIZE = 20;
+ 
+-/** 卡片排序：默认 = provider 分组序；soonest = 最快恢复优先。 */
++/** 卡片排序：默认 = provider 分组后按优先级升序，同值保留原序；soonest = 最快恢复优先。 */
+ export const QUOTA_SORT_MODES = ['default', 'soonest'] as const;
+ 
+ export type QuotaSortMode = (typeof QUOTA_SORT_MODES)[number];
+diff --git a/src/features/quota/logic.ts b/src/features/quota/logic.ts
+index 2b4b0ce96d54207cd0f70b2c2a566d483d525f83..e7039324dde4c679c62962514e0ec48312642d71 100644
+--- a/src/features/quota/logic.ts
++++ b/src/features/quota/logic.ts
+@@ -50,7 +50,8 @@ export function filterEntriesByTab(entries: QuotaFileEntry[], tab: QuotaTabId):
+ }
+ 
+ /**
+- * Order the grid by whichever credential recovers first.
++ * Default: provider groups, then ascending priority with stable ties.
++ * Soonest: order the grid by whichever credential recovers first.
+  *
+  * The instant is injected rather than read here: quota lives in the store and
+  * arrives asynchronously, and keeping this function store-free is what makes
+@@ -70,7 +71,13 @@ export function sortQuotaEntries(
+   mode: QuotaSortMode,
+   resolveNextRecoveryMs: (entry: QuotaFileEntry) => number | null
+ ): QuotaFileEntry[] {
+-  if (mode !== 'soonest') return [...entries];
++  if (mode !== 'soonest') {
++    return [...entries].sort(
++      (a, b) =>
++        QUOTA_TAB_ORDER.indexOf(a.type) - QUOTA_TAB_ORDER.indexOf(b.type) ||
++        (a.file.priority ?? 0) - (b.file.priority ?? 0)
++    );
++  }
+ 
+   // Decorate once — resolving pokes at provider-shaped state per entry.
+   return entries
 diff --git a/src/features/quota/providers/codex/CodexQuotaBody.tsx b/src/features/quota/providers/codex/CodexQuotaBody.tsx
 index 8e8d44a8fc8ea23244033abb86c09a7d735780ba..913720c7f1c99a1686b6543aa48354caa18219ec 100644
 --- a/src/features/quota/providers/codex/CodexQuotaBody.tsx
