@@ -43,65 +43,49 @@ def version_tuple(version):
     return tuple(map(int, version.split('.')))
 
 
-def archive_bytes(files):
+def read_archives(directory, plugin, version):
     import io
-    out = io.BytesIO()
-    with zipfile.ZipFile(out, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-        for name in sorted(files):
-            info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
-            info.create_system = 3
-            info.external_attr = 0o100644 << 16
-            info.compress_type = zipfile.ZIP_DEFLATED
-            archive.writestr(info, files[name])
-    return out.getvalue()
+    archives = {}
+    hashes = {}
+    expected_names = {f'{plugin}_{version}_linux_{arch}.zip' for arch in ('amd64','arm64')}
+    if {p.name for p in directory.iterdir()} != expected_names:
+        raise ValueError('Unexpected archive set')
+    for arch in ('amd64','arm64'):
+        name = f'{plugin}_{version}_linux_{arch}.zip'
+        data = (directory/name).read_bytes()
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            expected = {plugin+'.so','LICENSE','THIRD_PARTY_NOTICES'}
+            if set(archive.namelist()) != expected or len(archive.namelist()) != len(expected):
+                raise ValueError('Unexpected ZIP contents')
+            for member in archive.infolist():
+                if member.file_size > 256*1024*1024 or member.is_dir():
+                    raise ValueError('Invalid ZIP member')
+            library = archive.read(plugin+'.so')
+            if not archive.read('LICENSE') or not archive.read('THIRD_PARTY_NOTICES'):
+                raise ValueError('Missing license')
+        if library[:6] != b'\x7fELF\x02\x01' or int.from_bytes(library[18:20], 'little') != (62 if arch=='amd64' else 183):
+            raise ValueError('ELF architecture mismatch')
+        archives[name] = data
+        hashes[arch] = digest(library)
+    return archives, hashes
 
 
-def extract(plugin, version, arch, temp):
-    image = f'ghcr.io/siriusrry/{plugin}:{version}'
-    run('docker', 'pull', '--platform', f'linux/{arch}', image)
-    identity = json.loads(run('docker', 'image', 'inspect', image))[0]
-    labels = identity['Config']['Labels']
-    if identity['Os'] != 'linux' or identity['Architecture'] != arch or labels['org.opencontainers.image.version'] != version:
-        raise ValueError('Image identity mismatch')
-    container = run('docker', 'create', '--platform', f'linux/{arch}', identity['Id'])
-    directory = temp / arch
-    directory.mkdir()
-    paths = {
-        plugin + '.so': '/release/' + plugin + '.so',
-        'metadata.json': '/release/metadata.json',
-        'LICENSE': '/licenses/LICENSE',
-        'THIRD_PARTY_NOTICES': '/licenses/THIRD_PARTY_NOTICES',
-    }
-    try:
-        for name, source in paths.items():
-            run('docker', 'cp', f'{container}:{source}', str(directory / name))
-    finally:
-        run('docker', 'rm', container)
-    metadata = json.loads((directory / 'metadata.json').read_text())
-    library = (directory / (plugin + '.so')).read_bytes()
-    expected = dict(plugin_id=plugin, version=version, filename=plugin+'.so', os='linux', architecture=arch)
-    if any(metadata.get(key) != value for key, value in expected.items()):
-        raise ValueError('Plugin metadata mismatch')
-    if digest(library) != metadata['sha256']:
-        raise ValueError('Plugin checksum mismatch')
-    machine = 62 if arch == 'amd64' else 183
-    if library[:6] != b'\x7fELF\x02\x01' or int.from_bytes(library[18:20], 'little') != machine:
-        raise ValueError('Plugin architecture mismatch')
-    files = {name: (directory / name).read_bytes() for name in paths if name != 'metadata.json'}
-    if not all(files.values()):
-        raise ValueError('Empty artifact or license')
-    return archive_bytes(files), metadata['sha256']
-
-
-def merge_registry(registry, entry):
+def merge_registry(registry, entry, historical=False):
     if registry.get('schema_version') != 2:
         raise ValueError('Unexpected registry schema')
     plugins = registry['plugins']
     existing = next((p for p in plugins if p['id'] == entry['id']), None)
     if existing:
         old_version, new_version = version_tuple(existing['version']), version_tuple(entry['version'])
-        if new_version < old_version:
-            raise ValueError('Refusing to downgrade registry')
+        if new_version < old_version or (historical and new_version != old_version):
+            versions = existing.setdefault('versions', [])
+            found = next((v for v in versions if v['version']==entry['version']), None)
+            candidate = {'version':entry['version'], 'install':entry['install']}
+            if found is not None and found != candidate:
+                raise ValueError('Historical artifacts are immutable')
+            if found is None:
+                versions.append(candidate)
+            return registry
         if new_version == old_version:
             if existing['install'] != entry['install']:
                 raise ValueError('Version artifacts are immutable')
@@ -111,6 +95,8 @@ def merge_registry(registry, entry):
             *existing.get('versions', []),
         ]
         plugins.remove(existing)
+    if historical and existing is None:
+        raise ValueError('Historical publication requires a current registry entry')
     plugins.append(entry)
     plugins.sort(key=lambda p: p['id'])
     return registry
@@ -121,6 +107,8 @@ def main():
     parser.add_argument('--plugin', choices=NAMES, required=True)
     parser.add_argument('--version', required=True)
     parser.add_argument('--repo', default='Siriusrry/cpa-assets')
+    parser.add_argument('--artifacts', type=Path, required=True)
+    parser.add_argument('--historical', action='store_true')
     args = parser.parse_args()
     version_tuple(args.version)
     if args.repo != 'Siriusrry/cpa-assets':
@@ -133,16 +121,12 @@ def main():
     latest_id = api(base + '/releases/latest')['id']
     registry = json.loads((ROOT / 'registry.json').read_text())
     existing = next((p for p in registry['plugins'] if p['id'] == args.plugin), None)
-    if existing and version_tuple(args.version) < version_tuple(existing['version']):
-        raise ValueError('Refusing to downgrade registry')
+    if not existing and args.historical:
+        raise ValueError('Historical publication requires an existing registry entry')
     tag = f'{args.plugin}/v{args.version}'
     with tempfile.TemporaryDirectory() as temporary:
         temp = Path(temporary)
-        archives = {}
-        hashes = {}
-        for arch in ('amd64', 'arm64'):
-            name = f'{args.plugin}_{args.version}_linux_{arch}.zip'
-            archives[name], hashes[arch] = extract(args.plugin, args.version, arch, temp)
+        archives, hashes = read_archives(args.artifacts.resolve(), args.plugin, args.version)
         target = run('git', 'rev-parse', 'HEAD')
         release = api(base + '/releases/tags/' + quote(tag, safe=''), allow_missing=True)
         if release is None:
@@ -192,7 +176,7 @@ def main():
         entry = {'id':args.plugin,'name':NAMES[args.plugin],'description':NAMES[args.plugin],
                  'author':'Siriusrry','version':args.version,
                  'install':{'type':'direct','artifacts':artifacts}}
-        result = merge_registry(registry, entry)
+        result = merge_registry(registry, entry, historical=args.historical)
         (ROOT / 'registry.json').write_text(json.dumps(result,indent=2)+'\n')
         if run('git','status','--porcelain'):
             run('git','add','--','registry.json')
