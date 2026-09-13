@@ -18,14 +18,14 @@ def main():
     if not due(data.get('checked_at'), now):
         print('Maintenance checkpoint is current; no commit needed.')
         return
-    data = {'checked_at': now.isoformat(), 'purpose': 'Scheduled automation is alive; prevent public-repository inactivity suspension.'}
+    data = {'checked_at': now.isoformat()}
     path.parent.mkdir(exist_ok=True)
     path.write_text(json.dumps(data, indent=2) + '\n')
     for args in [
         ['git', 'config', 'user.name', 'github-actions[bot]'],
         ['git', 'config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'],
         ['git', 'add', '.maintenance/heartbeat.json'],
-        ['git', 'commit', '-m', 'chore: record scheduled maintenance checkpoint [skip ci]'],
+        ['git', 'commit', '-m', 'chore: maintenance [skip ci]'],
         ['git', 'push', 'origin', 'HEAD:main'],
     ]:
         subprocess.run(args, check=True)

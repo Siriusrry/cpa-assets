@@ -1,13 +1,11 @@
 """Release automation. Only official stable snapshots and reviewed local patches execute."""
 import argparse
-import datetime as dt
 import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import subprocess
-import tarfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -64,7 +62,7 @@ def plan(repo):
     if response.returncode == 0:
         existing = json.loads(response.stdout)
         if not existing['draft']:
-            required = {'management.html', 'SHA256SUMS', 'build-info.json', 'source.tar.gz', 'LICENSE'}
+            required = {'management.html', 'SHA256SUMS', 'build-info.json', 'LICENSE'}
             if not required.issubset({a['name'] for a in existing['assets']}):
                 raise ValueError('Published release is incomplete; repair manually')
             metadata_url = next(a['url'] for a in existing['assets'] if a['name'] == 'build-info.json')
@@ -128,23 +126,11 @@ def package():
     license_text = (source / 'LICENSE').read_text()
     (out / 'management.html').write_text('<!--\n' + license_text.replace('--', '—') + '\n-->\n' + html)
     (out / 'LICENSE').write_text(license_text)
-    info = {**plan, 'built_at': dt.datetime.now(dt.timezone.utc).isoformat()}
-    info.pop('build')
+    info = {key: plan[key] for key in ('version', 'upstream_sha', 'fingerprint')}
     (out / 'build-info.json').write_text(json.dumps(info, indent=2) + '\n')
-    with tarfile.open(out / 'source.tar.gz', 'w:gz') as archive:
-        # Public source only, no .git, caches, dependencies or compiled assets.
-        files = run('git', 'ls-files', '--cached', '--others', '--exclude-standard', cwd=source).splitlines()
-        for name in files:
-            archive.add(source / name, arcname=f'source/{name}', recursive=False)
-    names = ['management.html', 'LICENSE', 'build-info.json', 'source.tar.gz']
+    names = ['management.html', 'LICENSE', 'build-info.json']
     (out / 'SHA256SUMS').write_text(''.join(f'{hashlib.sha256((out / name).read_bytes()).hexdigest()}  {name}\n' for name in names))
-    (ROOT / '.work/release-notes.md').write_text(
-        f"Based on [{plan['upstream_tag']}](https://github.com/{plan['upstream']}/releases/tag/{plan['upstream_tag']}) "
-        f"(`{plan['upstream_sha']}`).\n\n"
-        'Adds authentication priority after the Codex reset count, email quota-card/window labels with full filenames on hover, provider-grouped default ordering with ascending priority and stable ties, and a Siriusrry version suffix.\n\n'
-        'Validation: the official upstream test, lint and TypeScript/build workflow; '
-        'single-file HTML/version checks and release attachment round-trip verification.\n\n'
-        f"Pipeline source: `{plan['pipeline_sha']}`. Build metadata and corresponding patched source attached.\n")
+    (ROOT / '.work/release-notes.md').write_text('')
 
 
 def publish():
@@ -172,7 +158,11 @@ def publish():
         if previous:
             run('gh', 'api', '--method', 'PATCH', f'repos/{repo}/git/refs/tags/{tag}',
                 '-f', f"sha={plan['pipeline_sha']}", '-F', 'force=true')
-        assets = [str(p) for p in sorted((ROOT / 'out').iterdir()) if p.is_file()]
+        expected = {'management.html', 'LICENSE', 'build-info.json', 'SHA256SUMS'}
+        actual = {p.name for p in (ROOT / 'out').iterdir()}
+        if actual != expected:
+            raise ValueError('Unexpected release contents')
+        assets = [str(ROOT / 'out' / name) for name in sorted(expected)]
         run('gh', 'release', 'upload', tag, *assets, '--repo', repo, '--clobber')
         verify = ROOT / '.work/downloaded'
         verify.mkdir()
