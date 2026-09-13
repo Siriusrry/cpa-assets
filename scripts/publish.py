@@ -179,7 +179,14 @@ def main():
             artifacts.append({'goos':'linux','goarch':arch,'url':asset['browser_download_url'],
                               'sha256':digest(remote),'size':len(remote)})
         if release['draft']:
-            api(f"{base}/releases/{release['id']}", 'PATCH', {'draft':False,'make_latest':'false','body':''})
+            release = api(f"{base}/releases/{release['id']}", 'PATCH', {'draft':False,'make_latest':'false','body':''})
+        else:
+            release = api(f"{base}/releases/{release['id']}")
+        # Draft assets use temporary untagged URLs; resolve published URLs last.
+        published_assets = {a['name']: a for a in release['assets']}
+        for artifact in artifacts:
+            name = f'{args.plugin}_{args.version}_linux_{artifact["goarch"]}.zip'
+            artifact['url'] = published_assets[name]['browser_download_url']
         if api(base + '/releases/latest')['id'] != latest_id:
             raise ValueError('Frontend latest release changed')
         entry = {'id':args.plugin,'name':NAMES[args.plugin],'description':NAMES[args.plugin],

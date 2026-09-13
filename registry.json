@@ -13,14 +13,14 @@
           {
             "goos": "linux",
             "goarch": "amd64",
-            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/untagged-7c4756931566ca3a7bae/api-usage-console_1.1.0_linux_amd64.zip",
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/api-usage-console/v1.1.0/api-usage-console_1.1.0_linux_amd64.zip",
             "sha256": "e49f3b8b0ab631348245f8c5186d811040e62b86852d9edae4a7f1a528f975e5",
             "size": 8791509
           },
           {
             "goos": "linux",
             "goarch": "arm64",
-            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/untagged-7c4756931566ca3a7bae/api-usage-console_1.1.0_linux_arm64.zip",
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/api-usage-console/v1.1.0/api-usage-console_1.1.0_linux_arm64.zip",
             "sha256": "6ae75fdc8739f7e7d87099d45df0b5ee151428db03499eab56ea66a0a3603309",
             "size": 8198608
           }
@@ -39,14 +39,14 @@
           {
             "goos": "linux",
             "goarch": "amd64",
-            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/untagged-7d16c553a48092e4309a/codex-window-keeper_0.4.3_linux_amd64.zip",
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-window-keeper/v0.4.3/codex-window-keeper_0.4.3_linux_amd64.zip",
             "sha256": "f5b7602bf8c78c8d15015a31e583698fbb95b72a81e0457479b4880c1cfa3245",
             "size": 5908746
           },
           {
             "goos": "linux",
             "goarch": "arm64",
-            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/untagged-7d16c553a48092e4309a/codex-window-keeper_0.4.3_linux_arm64.zip",
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-window-keeper/v0.4.3/codex-window-keeper_0.4.3_linux_arm64.zip",
             "sha256": "76ff1df31bb33350057b8dd9f169033cc38de8e620c3247cab74d3efe25784f1",
             "size": 5483853
           }
