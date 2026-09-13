@@ -32,7 +32,8 @@ def fingerprint():
     digest = hashlib.sha256()
     paths = [ROOT / 'build-config.json']
     for folder in ['patches', 'scripts', '.github/workflows']:
-        paths += sorted(p for p in (ROOT / folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts)
+        paths += sorted(p for p in (ROOT / folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts
+                        and p.relative_to(ROOT).as_posix() != '.github/workflows/plugins.yml')
     for p in paths:
         digest.update(str(p.relative_to(ROOT)).encode() + b'\0' + p.read_bytes() + b'\0')
     return digest.hexdigest()

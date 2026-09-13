@@ -1,0 +1,32 @@
+name: Publish plugin assets
+on:
+  workflow_dispatch:
+    inputs:
+      plugin:
+        required: true
+        type: choice
+        options:
+          - api-usage-console
+          - codex-window-keeper
+      version:
+        required: true
+        type: string
+permissions:
+  contents: write
+concurrency:
+  group: plugin-assets
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: plugins
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLUGIN: ${{ inputs.plugin }}
+          VERSION: ${{ inputs.version }}
+        run: python3 scripts/publish.py --plugin "$PLUGIN" --version "$VERSION"
