@@ -51,7 +51,31 @@
             "size": 5483853
           }
         ]
-      }
+      },
+      "versions": [
+        {
+          "version": "0.4.2",
+          "install": {
+            "type": "direct",
+            "artifacts": [
+              {
+                "goos": "linux",
+                "goarch": "amd64",
+                "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-window-keeper/v0.4.2/codex-window-keeper_0.4.2_linux_amd64.zip",
+                "sha256": "0144df6c9f89898cbfdea0185ee1d3658dc7da3a4565d5ca54d29fd1064e71ca",
+                "size": 4828958
+              },
+              {
+                "goos": "linux",
+                "goarch": "arm64",
+                "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-window-keeper/v0.4.2/codex-window-keeper_0.4.2_linux_arm64.zip",
+                "sha256": "dd5f6c90864867f366b025d825a5a35cb705e994c258c64ca56899a97f349bff",
+                "size": 4483152
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }
