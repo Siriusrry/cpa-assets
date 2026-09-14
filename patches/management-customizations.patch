@@ -1,40 +1,92 @@
-diff --git a/src/features/quota/QuotaPage.tsx b/src/features/quota/QuotaPage.tsx
-index f1c07f32d20522f41341b647a3421448af4b1979..60a5bb380b50235beabd13361b6785df9aad642e 100644
---- a/src/features/quota/QuotaPage.tsx
-+++ b/src/features/quota/QuotaPage.tsx
-@@ -51,18 +51,16 @@ import styles from './QuotaPage.module.scss';
- const TAB_IDS: string[] = ['all', ...QUOTA_TAB_ORDER];
- const SKELETON_CARD_COUNT = 6;
+diff --git a/src/features/quota/components/QuotaCard.tsx b/src/features/quota/components/QuotaCard.tsx
+index 2ab6b3c219a9013d77d31d0acca9fe84410c3568..cf73999ac665e1ea1b1efb3522411ca890862af9 100644
+--- a/src/features/quota/components/QuotaCard.tsx
++++ b/src/features/quota/components/QuotaCard.tsx
+@@ -99,7 +99,7 @@ export function QuotaCard(props: QuotaCardProps) {
+             <span className={styles.iconFallback}>{typeLabel.slice(0, 1).toUpperCase()}</span>
+           )}
+         </span>
+-        <span className={styles.fileName} title={displayName}>
++        <span className={styles.fileName} title={entry.type === 'codex' ? file.name : displayName}>
+           {displayName}
+         </span>
+       </header>
+@@ -130,7 +130,7 @@ export function QuotaCard(props: QuotaCardProps) {
+             {t(`${adapter.i18nPrefix}.load_failed`, { message: errorMessage })}
+           </div>
+         ) : quota ? (
+-          <adapter.Body quota={quota} classes={quotaClasses} />
++          <adapter.Body quota={quota} classes={quotaClasses} file={file} />
+         ) : (
+           <div className={styles.idleHint}>{t(`${adapter.i18nPrefix}.idle`)}</div>
+         )}
+diff --git a/src/features/quota/components/QuotaTimeline.tsx b/src/features/quota/components/QuotaTimeline.tsx
+index 8acfa947be026af6b003cefe8308ec6167cf615b..d72678d6edfb1e118a27cdaf7a329ca946707795 100644
+--- a/src/features/quota/components/QuotaTimeline.tsx
++++ b/src/features/quota/components/QuotaTimeline.tsx
+@@ -94,7 +94,7 @@ export function QuotaTimeline({
+       entries.map((entry) => ({
+         name: getQuotaCacheKey(entry.file),
+         displayName:
+-          entry.type === 'devin'
++          entry.type === 'codex' || entry.type === 'devin'
+             ? getQuotaDisplayName(entry.file)
+             : displayNameFor(entry.file.name),
+         provider: entry.type,
+@@ -330,6 +330,7 @@ function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneP
+     [lane, span, now]
+   );
  
--/**
-- * 时间线泳道名 = 卡片标题，两者必须一致。卡片显示的就是文件名，所以这里是恒等。
-- * 提到模块级是为了引用稳定 —— 它进了泳道 memo 的依赖数组。
-- */
--const displayNameFor = (name: string) => name;
--
- export function QuotaPage() {
-   const { t } = useTranslation();
-   const connectionStatus = useAuthStore((state) => state.connectionStatus);
-   const resolvedTheme: ResolvedTheme = useThemeStore((state) => state.resolvedTheme);
++  const hoverName = lane.provider === 'codex' ? lane.name : lane.displayName;
+   const colorSet = TYPE_COLORS[lane.provider] || TYPE_COLORS.unknown;
+   const color: ThemeColors =
+     resolvedTheme === 'dark' && colorSet.dark ? colorSet.dark : colorSet.light;
+@@ -349,7 +350,7 @@ function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneP
+       <div className={styles.laneHead}>
+         <div className={styles.laneTop}>
+           <span className={styles.laneDot} />
+-          <span className={styles.laneName} title={lane.displayName}>
++          <span className={styles.laneName} title={hoverName}>
+             {lane.displayName}
+           </span>
+           {periodLabel && <span className={styles.lanePeriod}>{periodLabel}</span>}
+@@ -399,7 +400,7 @@ function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneP
+                 key={window.startMs}
+                 className={`${styles.window} ${styles[`window${capitalize(window.state)}`]}`}
+                 style={{ left: `${window.leftPercent}%`, width: `${window.widthPercent}%` }}
+-                title={`${lane.displayName}\n${formatDay(window.startMs)} ${formatTime(
++                title={`${hoverName}\n${formatDay(window.startMs)} ${formatTime(
+                   window.startMs
+                 )} → ${formatDay(window.endMs)} ${formatTime(window.endMs)}${
+                   window.remaining !== null ? `\n${window.remaining}% remaining` : ''
+diff --git a/src/features/quota/logic.ts b/src/features/quota/logic.ts
+index 903d26d8635587033f105fb1ad08f39dead75eb7..02a9d97ce4745d401960168384bebca9f96a0e4d 100644
+--- a/src/features/quota/logic.ts
++++ b/src/features/quota/logic.ts
+@@ -85,7 +85,16 @@ export function sortQuotaEntries(
+   mode: QuotaSortMode,
+   resolveNextRecoveryMs: (entry: QuotaFileEntry) => number | null
+ ): QuotaFileEntry[] {
+-  if (mode !== 'soonest') return [...entries];
++  if (mode !== 'soonest') {
++    // Keep provider groups; only Codex has a custom priority order.
++    return [...entries].sort(
++      (a, b) =>
++        QUOTA_TAB_ORDER.indexOf(a.type) - QUOTA_TAB_ORDER.indexOf(b.type) ||
++        (a.type === 'codex' && b.type === 'codex'
++          ? (a.file.priority ?? 0) - (b.file.priority ?? 0)
++          : 0)
++    );
++  }
  
-   const [files, setFiles] = useState<AuthFileItem[]>([]);
-+  const displayNameFor = useCallback(
-+    (name: string) => files.find((file) => file.name === name)!.email!,
-+    [files]
-+  );
-   const [loading, setLoading] = useState(true);
-   const [error, setError] = useState('');
-   const [tab, setTab] = useState<QuotaTabId>(() => readQuotaUiState()?.tab ?? 'all');
-diff --git a/src/features/quota/components/QuotaCard.module.scss b/src/features/quota/components/QuotaCard.module.scss
-index c80841fe37e6a7a2e129221fdd095fc99b1b5acc..20a9349d679a75d80161dada6ef68258ea7ccd8c 100644
---- a/src/features/quota/components/QuotaCard.module.scss
-+++ b/src/features/quota/components/QuotaCard.module.scss
-@@ -308,3 +308,28 @@
-     animation: none;
-   }
- }
-+
-+/* Match the authentication-file priority badge; scoped to the quota-page host. */
+   // Decorate once — resolving pokes at provider-shaped state per entry.
+   return entries
+diff --git a/src/features/quota/providers/codex/CodexQuotaBody.module.scss b/src/features/quota/providers/codex/CodexQuotaBody.module.scss
+new file mode 100644
+index 0000000000000000000000000000000000000000..c32c5a0ab15a1c416a25fe5e2a9d4fe753fed773
+--- /dev/null
++++ b/src/features/quota/providers/codex/CodexQuotaBody.module.scss
+@@ -0,0 +1,23 @@
 +.priority {
 +  display: inline-flex;
 +  align-items: baseline;
@@ -58,125 +110,29 @@ index c80841fe37e6a7a2e129221fdd095fc99b1b5acc..20a9349d679a75d80161dada6ef68258
 +  color: currentColor;
 +  opacity: 0.78;
 +}
-diff --git a/src/features/quota/components/QuotaCard.tsx b/src/features/quota/components/QuotaCard.tsx
-index 0c5303ab129c7c84994df40750498e9a4cc6ee5a..ab069c24675cb4964933c574e1517d69b49bc5cb 100644
---- a/src/features/quota/components/QuotaCard.tsx
-+++ b/src/features/quota/components/QuotaCard.tsx
-@@ -53,6 +53,7 @@ export function QuotaCard(props: QuotaCardProps) {
-   const { t } = useTranslation();
-   const adapter = QUOTA_ADAPTERS[entry.type];
-   const file = entry.file;
-+  const priority = Number.isSafeInteger(file.priority) ? file.priority : undefined;
- 
-   // 挂载时捕获一次延迟：后续 props 变 null 不影响本卡（React 19 禁渲染期读 ref）
-   const [mountEntranceDelayMs] = useState<number | null>(entranceDelayMs ?? null);
-@@ -98,7 +99,7 @@ export function QuotaCard(props: QuotaCardProps) {
-           )}
-         </span>
-         <span className={styles.fileName} title={file.name}>
--          {file.name}
-+          {file.email}
-         </span>
-       </header>
- 
-@@ -128,7 +129,18 @@ export function QuotaCard(props: QuotaCardProps) {
-             {t(`${adapter.i18nPrefix}.load_failed`, { message: errorMessage })}
-           </div>
-         ) : quota ? (
--          <adapter.Body quota={quota} classes={quotaClasses} />
-+          <adapter.Body
-+            quota={quota}
-+            classes={quotaClasses}
-+            planExtra={
-+              entry.type === 'codex' && priority !== undefined ? (
-+                <span className={styles.priority} title={t('auth_files.priority_hint')}>
-+                  <span className={styles.priorityLabel}>{t('auth_files.priority_display')}</span>
-+                  <span>{priority}</span>
-+                </span>
-+              ) : undefined
-+            }
-+          />
-         ) : (
-           <div className={styles.idleHint}>{t(`${adapter.i18nPrefix}.idle`)}</div>
-         )}
-diff --git a/src/features/quota/components/QuotaTimeline.tsx b/src/features/quota/components/QuotaTimeline.tsx
-index 99147773434d95cc44fc17f5e3e8a89d86f5f5ab..38ec75e05888f9ec2540944e54e8f72db8723381 100644
---- a/src/features/quota/components/QuotaTimeline.tsx
-+++ b/src/features/quota/components/QuotaTimeline.tsx
-@@ -345,7 +345,7 @@ function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneP
-       <div className={styles.laneHead}>
-         <div className={styles.laneTop}>
-           <span className={styles.laneDot} />
--          <span className={styles.laneName} title={lane.displayName}>
-+          <span className={styles.laneName} title={lane.name}>
-             {lane.displayName}
-           </span>
-           {periodLabel && <span className={styles.lanePeriod}>{periodLabel}</span>}
-@@ -395,7 +395,7 @@ function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneP
-                 key={window.startMs}
-                 className={`${styles.window} ${styles[`window${capitalize(window.state)}`]}`}
-                 style={{ left: `${window.leftPercent}%`, width: `${window.widthPercent}%` }}
--                title={`${lane.displayName}\n${formatDay(window.startMs)} ${formatTime(
-+                title={`${lane.name}\n${formatDay(window.startMs)} ${formatTime(
-                   window.startMs
-                 )} → ${formatDay(window.endMs)} ${formatTime(window.endMs)}${
-                   window.remaining !== null ? `\n${window.remaining}% remaining` : ''
-diff --git a/src/features/quota/constants.ts b/src/features/quota/constants.ts
-index ca29a05131a2c1709e77ca3549e9c126d85da0d8..a3c61f824c70cab198faebd287279de770d1ce0d 100644
---- a/src/features/quota/constants.ts
-+++ b/src/features/quota/constants.ts
-@@ -14,7 +14,7 @@ export type QuotaTabId = 'all' | QuotaProviderType;
- /** 页级分页固定 20/页，同时把「刷新全部」的上游并发限制在 20。 */
- export const QUOTA_PAGE_SIZE = 20;
- 
--/** 卡片排序：默认 = provider 分组序；soonest = 最快恢复优先。 */
-+/** 卡片排序：默认 = provider 分组后按优先级升序，同值保留原序；soonest = 最快恢复优先。 */
- export const QUOTA_SORT_MODES = ['default', 'soonest'] as const;
- 
- export type QuotaSortMode = (typeof QUOTA_SORT_MODES)[number];
-diff --git a/src/features/quota/logic.ts b/src/features/quota/logic.ts
-index 2b4b0ce96d54207cd0f70b2c2a566d483d525f83..e7039324dde4c679c62962514e0ec48312642d71 100644
---- a/src/features/quota/logic.ts
-+++ b/src/features/quota/logic.ts
-@@ -50,7 +50,8 @@ export function filterEntriesByTab(entries: QuotaFileEntry[], tab: QuotaTabId):
- }
- 
- /**
-- * Order the grid by whichever credential recovers first.
-+ * Default: provider groups, then ascending priority with stable ties.
-+ * Soonest: order the grid by whichever credential recovers first.
-  *
-  * The instant is injected rather than read here: quota lives in the store and
-  * arrives asynchronously, and keeping this function store-free is what makes
-@@ -70,7 +71,13 @@ export function sortQuotaEntries(
-   mode: QuotaSortMode,
-   resolveNextRecoveryMs: (entry: QuotaFileEntry) => number | null
- ): QuotaFileEntry[] {
--  if (mode !== 'soonest') return [...entries];
-+  if (mode !== 'soonest') {
-+    return [...entries].sort(
-+      (a, b) =>
-+        QUOTA_TAB_ORDER.indexOf(a.type) - QUOTA_TAB_ORDER.indexOf(b.type) ||
-+        (a.file.priority ?? 0) - (b.file.priority ?? 0)
-+    );
-+  }
- 
-   // Decorate once — resolving pokes at provider-shaped state per entry.
-   return entries
 diff --git a/src/features/quota/providers/codex/CodexQuotaBody.tsx b/src/features/quota/providers/codex/CodexQuotaBody.tsx
-index 8e8d44a8fc8ea23244033abb86c09a7d735780ba..913720c7f1c99a1686b6543aa48354caa18219ec 100644
+index 8e8d44a8fc8ea23244033abb86c09a7d735780ba..0f7d2134a42d79640d464d3b13d4d07f827171bd 100644
 --- a/src/features/quota/providers/codex/CodexQuotaBody.tsx
 +++ b/src/features/quota/providers/codex/CodexQuotaBody.tsx
-@@ -31,7 +31,7 @@ const getPlanValueClass = (planType: string | null, classes: QuotaClassMap): str
+@@ -22,6 +22,7 @@ import { QuotaMeter } from '../../components/QuotaMeter';
+ import { QuotaResetLabel } from '../../components/QuotaResetLabel';
+ import { collectQuotaRowInstants, pickUrgentRowId, resetCreditRowId } from '../../resetSchedule';
+ import type { QuotaBodyProps, QuotaClassMap } from '../../types';
++import styles from './CodexQuotaBody.module.scss';
+ 
+ const getPlanValueClass = (planType: string | null, classes: QuotaClassMap): string => {
+   // elite/premium 顺序契约由 resolvePlanTier 承载（tests/quotaPlanTier.test.ts 守护）。
+@@ -31,7 +32,8 @@ const getPlanValueClass = (planType: string | null, classes: QuotaClassMap): str
    return classes.codexPlanValue;
  };
  
 -export function CodexQuotaBody({ quota, classes }: QuotaBodyProps<CodexQuotaState>) {
-+export function CodexQuotaBody({ quota, classes, planExtra }: QuotaBodyProps<CodexQuotaState>) {
++export function CodexQuotaBody({ quota, classes, file }: QuotaBodyProps<CodexQuotaState>) {
++  const priority = Number.isSafeInteger(file?.priority) ? file?.priority : undefined;
    const { t, i18n } = useTranslation();
    const now = useNow();
    const locale = i18n.resolvedLanguage;
-@@ -79,7 +79,10 @@ export function CodexQuotaBody({ quota, classes }: QuotaBodyProps<CodexQuotaStat
+@@ -79,7 +81,10 @@ export function CodexQuotaBody({ quota, classes }: QuotaBodyProps<CodexQuotaStat
  
    return (
      <>
@@ -184,32 +140,153 @@ index 8e8d44a8fc8ea23244033abb86c09a7d735780ba..913720c7f1c99a1686b6543aa48354ca
 +      {(planLabel ||
 +        expiryDisplay ||
 +        rateLimitResetCreditsAvailableCount !== null ||
-+        planExtra) && (
++        priority !== undefined) && (
          <div className={classes.codexPlan}>
            {planLabel && (
              <span className={classes.codexPlanItem}>
-@@ -104,6 +107,7 @@ export function CodexQuotaBody({ quota, classes }: QuotaBodyProps<CodexQuotaStat
+@@ -104,6 +109,12 @@ export function CodexQuotaBody({ quota, classes }: QuotaBodyProps<CodexQuotaStat
                </span>
              </span>
            )}
-+          {planExtra}
++          {priority !== undefined && (
++            <span className={styles.priority} title={t('auth_files.priority_hint')}>
++              <span className={styles.priorityLabel}>{t('auth_files.priority_display')}</span>
++              <span>{priority}</span>
++            </span>
++          )}
          </div>
        )}
        {rateLimitResetCredits.length > 0 ? (
 diff --git a/src/features/quota/types.ts b/src/features/quota/types.ts
-index 6458f563e6f1f921118e46fd4e64f6f681364aa1..acef8764a66117decf94434d777de7b67759ed54 100644
+index 6458f563e6f1f921118e46fd4e64f6f681364aa1..e31efc275ae5cf48a95cc993d7f6116237dba8da 100644
 --- a/src/features/quota/types.ts
 +++ b/src/features/quota/types.ts
-@@ -1,3 +1,5 @@
-+import type { ReactNode } from 'react';
+@@ -7,6 +7,8 @@
+  * 初始化时抛错并列出缺失清单，替代旧字符串 styleMap 的静默 class="undefined"。
+  */
+ 
++import type { AuthFileItem } from '@/types';
 +
- /**
-  * 额度渲染层的类型化样式契约。
-  *
+ export interface QuotaClassMap {
+   // 额度行（五个提供商共用）
+   quotaRow: string;
 @@ -99,4 +101,6 @@ export function bindQuotaClasses(module: Record<string, string>, source: string)
  export interface QuotaBodyProps<TState> {
    quota: TState;
    classes: QuotaClassMap;
-+  /** Optional metadata supplied by the quota-page host, after the plan/reset count. */
-+  planExtra?: ReactNode;
++  /** Optional file metadata supplied by the quota-page host. */
++  file?: AuthFileItem;
  }
+diff --git a/src/utils/quota/identity.ts b/src/utils/quota/identity.ts
+index fbc3d6505e886c31cb89524511b7ca2f34a09a82..43b7e21365ca87c530b2412e9fa6ba8045da106a 100644
+--- a/src/utils/quota/identity.ts
++++ b/src/utils/quota/identity.ts
+@@ -1,6 +1,6 @@
+ import type { AuthFileItem } from '@/types';
+ import { normalizeRecentRequestAuthIndex } from '@/utils/recentRequests';
+-import { isDevinFile } from './validators';
++import { isCodexFile, isDevinFile } from './validators';
+ 
+ const QUOTA_IDENTITY_SEPARATOR = '\0';
+ 
+@@ -17,6 +17,7 @@ export function getQuotaCacheKey(file: AuthFileItem): string {
+ 
+ /** Disambiguate same-name Devin cards without ever falling back to account (a secret). */
+ export function getQuotaDisplayName(file: AuthFileItem): string {
++  if (isCodexFile(file)) return file.email!;
+   if (!isDevinFile(file)) return file.name;
+   const identity = file.email?.trim() || normalizeRecentRequestAuthIndex(file.authIndex);
+   return identity ? `${file.name} · ${identity}` : file.name;
+diff --git a/tests/codexCustomization.test.ts b/tests/codexCustomization.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..4e9b73f3def7adc05441d27732093c9a2707c2bc
+--- /dev/null
++++ b/tests/codexCustomization.test.ts
+@@ -0,0 +1,87 @@
++import { beforeAll, describe, expect, test } from 'bun:test';
++import { createElement } from 'react';
++import { renderToStaticMarkup } from 'react-dom/server';
++import i18n from '@/i18n';
++import type { AuthFileItem, CodexQuotaState } from '@/types';
++import { getQuotaCacheKey, getQuotaDisplayName } from '@/utils/quota/identity';
++import { QuotaTimeline } from '@/features/quota/components/QuotaTimeline';
++import { CodexQuotaBody } from '@/features/quota/providers/codex/CodexQuotaBody';
++import { classifyQuotaFiles, sortQuotaEntries } from '@/features/quota/logic';
++import { bindQuotaClasses, QUOTA_CLASS_KEYS } from '@/features/quota/types';
++
++const file: AuthFileItem = {
++  name: 'codex-primary.json',
++  provider: 'codex',
++  email: 'demo@example.test',
++  priority: 3,
++};
++const now = new Date(2026, 6, 29, 12).getTime();
++const quota: CodexQuotaState = {
++  status: 'success',
++  planType: 'plus',
++  rateLimitResetCreditsAvailableCount: 2,
++  windows: [
++    {
++      id: 'weekly',
++      label: '7-day',
++      usedPercent: 25,
++      resetAtMs: now + 86400000,
++      periodHours: 168,
++      resetLabel: null,
++    },
++  ],
++};
++const classes = bindQuotaClasses(
++  Object.fromEntries(QUOTA_CLASS_KEYS.map((key) => [key, key])),
++  'customization-test'
++);
++
++beforeAll(async () => {
++  await i18n.changeLanguage('en');
++});
++
++describe('Codex customization boundaries', () => {
++  test('uses one email label for Codex cards and lanes while retaining file identity', () => {
++    expect(getQuotaDisplayName(file)).toBe(file.email!);
++    expect(getQuotaCacheKey(file)).toBe(file.name);
++    const markup = renderToStaticMarkup(
++      createElement(QuotaTimeline, {
++        entries: [{ file, type: 'codex' }],
++        quotaFor: () => quota,
++        displayNameFor: (name) => name,
++        resolvedTheme: 'light',
++        now,
++      })
++    );
++    expect(markup).toContain(`title="${file.name}">${file.email}</span>`);
++    expect(markup).toContain(`title="${file.name}\n`);
++    expect(getQuotaDisplayName({ ...file, provider: 'claude' })).toBe(file.name);
++  });
++
++  test('places priority after reset credits only when the quota host supplies file metadata', () => {
++    const withFile = renderToStaticMarkup(createElement(CodexQuotaBody, { quota, classes, file }));
++    expect(withFile).toMatch(/>2<\/span>[\s\S]*>Priority<\/span><span>3<\/span>/);
++    const withoutFile = renderToStaticMarkup(createElement(CodexQuotaBody, { quota, classes }));
++    expect(withoutFile).not.toContain('>Priority</span>');
++  });
++
++  test('sorts Codex priorities stably without reordering other provider groups', () => {
++    const entries = classifyQuotaFiles([
++      { name: 'claude-first', provider: 'claude', priority: 9 },
++      { name: 'claude-second', provider: 'claude', priority: -9 },
++      { ...file, name: 'codex-high', priority: 5 },
++      { ...file, name: 'codex-low-first', priority: -1 },
++      { ...file, name: 'codex-low-second', priority: -1 },
++    ]);
++    const original = entries.map((entry) => entry.file.name);
++    const result = sortQuotaEntries(entries, 'default', () => null);
++    expect(result.map((entry) => entry.file.name)).toEqual([
++      'claude-first',
++      'claude-second',
++      'codex-low-first',
++      'codex-low-second',
++      'codex-high',
++    ]);
++    expect(entries.map((entry) => entry.file.name)).toEqual(original);
++  });
++});
