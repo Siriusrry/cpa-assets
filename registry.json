@@ -32,27 +32,49 @@
       "name": "Codex Window Keeper",
       "description": "Codex Window Keeper",
       "author": "Siriusrry",
-      "version": "0.4.4",
+      "version": "0.4.5",
       "install": {
         "type": "direct",
         "artifacts": [
           {
             "goos": "linux",
             "goarch": "amd64",
-            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-window-keeper/v0.4.4/codex-window-keeper_0.4.4_linux_amd64.zip",
-            "sha256": "150336770d53348a6e7794b11520d39c6db72774777a1286134dc5fd19c3ebde",
-            "size": 5911338
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-window-keeper/v0.4.5/codex-window-keeper_0.4.5_linux_amd64.zip",
+            "sha256": "143beadfe6557b3d1302c5d8d62a7b5e34e08e6b41798b516325b3e8973529d8",
+            "size": 5947269
           },
           {
             "goos": "linux",
             "goarch": "arm64",
-            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-window-keeper/v0.4.4/codex-window-keeper_0.4.4_linux_arm64.zip",
-            "sha256": "53e491f3d9a39c66a191789a386f4523d2b212813aa157fa5f02d87545708f31",
-            "size": 5487104
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-window-keeper/v0.4.5/codex-window-keeper_0.4.5_linux_arm64.zip",
+            "sha256": "5adeae6ffad0b9b74afe020394692047084545f674317b7fab5d5c5da9f5e5f4",
+            "size": 5522031
           }
         ]
       },
       "versions": [
+        {
+          "version": "0.4.4",
+          "install": {
+            "type": "direct",
+            "artifacts": [
+              {
+                "goos": "linux",
+                "goarch": "amd64",
+                "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-window-keeper/v0.4.4/codex-window-keeper_0.4.4_linux_amd64.zip",
+                "sha256": "150336770d53348a6e7794b11520d39c6db72774777a1286134dc5fd19c3ebde",
+                "size": 5911338
+              },
+              {
+                "goos": "linux",
+                "goarch": "arm64",
+                "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-window-keeper/v0.4.4/codex-window-keeper_0.4.4_linux_arm64.zip",
+                "sha256": "53e491f3d9a39c66a191789a386f4523d2b212813aa157fa5f02d87545708f31",
+                "size": 5487104
+              }
+            ]
+          }
+        },
         {
           "version": "0.4.3",
           "install": {
