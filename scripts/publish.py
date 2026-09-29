@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 NAMES = {
     'api-usage-console': 'API Usage Console',
     'codex-window-keeper': 'Codex Window Keeper',
+    'codex-quota-guard': 'Codex Quota Guard',
 }
 
 
