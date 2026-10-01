@@ -21,7 +21,7 @@ index 2ab6b3c219a9013d77d31d0acca9fe84410c3568..cf73999ac665e1ea1b1efb3522411ca8
            <div className={styles.idleHint}>{t(`${adapter.i18nPrefix}.idle`)}</div>
          )}
 diff --git a/src/features/quota/components/QuotaTimeline.tsx b/src/features/quota/components/QuotaTimeline.tsx
-index 8acfa947be026af6b003cefe8308ec6167cf615b..d72678d6edfb1e118a27cdaf7a329ca946707795 100644
+index 1e4d292f83345f56e149422e0dc5fd0707d71c5c..e19a138ff96e535edf320ee3c406267edfa4b4ce 100644
 --- a/src/features/quota/components/QuotaTimeline.tsx
 +++ b/src/features/quota/components/QuotaTimeline.tsx
 @@ -94,7 +94,7 @@ export function QuotaTimeline({
@@ -50,7 +50,7 @@ index 8acfa947be026af6b003cefe8308ec6167cf615b..d72678d6edfb1e118a27cdaf7a329ca9
              {lane.displayName}
            </span>
            {periodLabel && <span className={styles.lanePeriod}>{periodLabel}</span>}
-@@ -399,7 +400,7 @@ function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneP
+@@ -400,7 +401,7 @@ function Lane({ lane, span, now, mode, cells, nowPercent, resolvedTheme }: LaneP
                  key={window.startMs}
                  className={`${styles.window} ${styles[`window${capitalize(window.state)}`]}`}
                  style={{ left: `${window.leftPercent}%`, width: `${window.widthPercent}%` }}
@@ -60,10 +60,10 @@ index 8acfa947be026af6b003cefe8308ec6167cf615b..d72678d6edfb1e118a27cdaf7a329ca9
                  )} → ${formatDay(window.endMs)} ${formatTime(window.endMs)}${
                    window.remaining !== null ? `\n${window.remaining}% remaining` : ''
 diff --git a/src/features/quota/logic.ts b/src/features/quota/logic.ts
-index 903d26d8635587033f105fb1ad08f39dead75eb7..02a9d97ce4745d401960168384bebca9f96a0e4d 100644
+index 0420d459016ad564f6bcda14bb1972ece5db3cf5..a4bc2c5a5a173a67ea59af69a7fac14d148a0378 100644
 --- a/src/features/quota/logic.ts
 +++ b/src/features/quota/logic.ts
-@@ -85,7 +85,16 @@ export function sortQuotaEntries(
+@@ -98,7 +98,16 @@ export function sortQuotaEntries(
    mode: QuotaSortMode,
    resolveNextRecoveryMs: (entry: QuotaFileEntry) => number | null
  ): QuotaFileEntry[] {
@@ -111,7 +111,7 @@ index 0000000000000000000000000000000000000000..c32c5a0ab15a1c416a25fe5e2a9d4fe7
 +  opacity: 0.78;
 +}
 diff --git a/src/features/quota/providers/codex/CodexQuotaBody.tsx b/src/features/quota/providers/codex/CodexQuotaBody.tsx
-index 8e8d44a8fc8ea23244033abb86c09a7d735780ba..0f7d2134a42d79640d464d3b13d4d07f827171bd 100644
+index df61497ebfac75cbef83622f0f2b54aa17c92efa..81ed11bdec94812d8a6a28085597b396f42de50d 100644
 --- a/src/features/quota/providers/codex/CodexQuotaBody.tsx
 +++ b/src/features/quota/providers/codex/CodexQuotaBody.tsx
 @@ -22,6 +22,7 @@ import { QuotaMeter } from '../../components/QuotaMeter';
@@ -132,19 +132,17 @@ index 8e8d44a8fc8ea23244033abb86c09a7d735780ba..0f7d2134a42d79640d464d3b13d4d07f
    const { t, i18n } = useTranslation();
    const now = useNow();
    const locale = i18n.resolvedLanguage;
-@@ -79,7 +81,10 @@ export function CodexQuotaBody({ quota, classes }: QuotaBodyProps<CodexQuotaStat
- 
-   return (
-     <>
--      {(planLabel || expiryDisplay || rateLimitResetCreditsAvailableCount !== null) && (
-+      {(planLabel ||
-+        expiryDisplay ||
+@@ -88,7 +90,8 @@ export function CodexQuotaBody({ quota, classes }: QuotaBodyProps<CodexQuotaStat
+         expiryDisplay ||
+         creditsUnlimited ||
+         creditBalance !== null ||
+-        rateLimitResetCreditsAvailableCount !== null) && (
 +        rateLimitResetCreditsAvailableCount !== null ||
 +        priority !== undefined) && (
          <div className={classes.codexPlan}>
            {planLabel && (
              <span className={classes.codexPlanItem}>
-@@ -104,6 +109,12 @@ export function CodexQuotaBody({ quota, classes }: QuotaBodyProps<CodexQuotaStat
+@@ -123,6 +126,12 @@ export function CodexQuotaBody({ quota, classes }: QuotaBodyProps<CodexQuotaStat
                </span>
              </span>
            )}
