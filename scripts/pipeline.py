@@ -30,7 +30,7 @@ def release_tag(tag):
 
 def fingerprint():
     digest = hashlib.sha256()
-    paths = [ROOT / 'build-config.json']
+    paths = [ROOT / 'build-config.json', ROOT / 'locale-additions.json']
     for folder in ['patches', 'scripts', '.github/workflows']:
         paths += sorted(p for p in (ROOT / folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts
                         and p.relative_to(ROOT).as_posix() != '.github/workflows/plugins.yml')
@@ -85,6 +85,26 @@ def load_plan():
     return json.loads((ROOT / '.work/plan.json').read_text())
 
 
+def apply_locale_additions(source):
+    additions = json.loads((ROOT / 'locale-additions.json').read_text())
+    for language, entries in additions.items():
+        path = source / 'src/i18n/locales' / f'{language}.json'
+        translations = json.loads(path.read_text())
+        changed = False
+        for dotted_key, value in entries.items():
+            keys = dotted_key.split('.')
+            parent = translations
+            for key in keys[:-1]:
+                parent = parent[key]
+            # Fill absent keys only; future upstream translations always win.
+            if keys[-1] not in parent:
+                parent[keys[-1]] = value
+                changed = True
+        if changed:
+            path.write_text(json.dumps(translations, ensure_ascii=False, indent=2) + '\n')
+            run('git', 'add', path.relative_to(source).as_posix(), cwd=source)
+
+
 def prepare():
     plan = load_plan()
     source = ROOT / '.work/source'
@@ -111,6 +131,7 @@ def prepare():
     for patch in patches:
         # Three-way merge retains compatible upstream edits; real conflicts fail.
         run('git', 'apply', '--3way', str(patch), cwd=source)
+    apply_locale_additions(source)
     run('git', 'diff', '--cached', '--check', cwd=source)
 
 

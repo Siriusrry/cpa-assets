@@ -1,8 +1,8 @@
 diff --git a/src/features/quota/components/QuotaCard.tsx b/src/features/quota/components/QuotaCard.tsx
-index 2ab6b3c219a9013d77d31d0acca9fe84410c3568..cf73999ac665e1ea1b1efb3522411ca890862af9 100644
+index 0ad1af13002dae7a30d53a347caff887616964c4..7d33331e94f03b8565407ee2e7de5a24bfd71510 100644
 --- a/src/features/quota/components/QuotaCard.tsx
 +++ b/src/features/quota/components/QuotaCard.tsx
-@@ -99,7 +99,7 @@ export function QuotaCard(props: QuotaCardProps) {
+@@ -108,7 +108,7 @@ export function QuotaCard(props: QuotaCardProps) {
              <span className={styles.iconFallback}>{typeLabel.slice(0, 1).toUpperCase()}</span>
            )}
          </span>
@@ -11,7 +11,7 @@ index 2ab6b3c219a9013d77d31d0acca9fe84410c3568..cf73999ac665e1ea1b1efb3522411ca8
            {displayName}
          </span>
        </header>
-@@ -130,7 +130,7 @@ export function QuotaCard(props: QuotaCardProps) {
+@@ -155,7 +155,7 @@ export function QuotaCard(props: QuotaCardProps) {
              {t(`${adapter.i18nPrefix}.load_failed`, { message: errorMessage })}
            </div>
          ) : quota ? (
@@ -197,14 +197,16 @@ index fbc3d6505e886c31cb89524511b7ca2f34a09a82..43b7e21365ca87c530b2412e9fa6ba80
    return identity ? `${file.name} · ${identity}` : file.name;
 diff --git a/tests/codexCustomization.test.ts b/tests/codexCustomization.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..4e9b73f3def7adc05441d27732093c9a2707c2bc
+index 0000000000000000000000000000000000000000..9069dd7f85945e9187bc13c4285968293cd2173c
 --- /dev/null
 +++ b/tests/codexCustomization.test.ts
-@@ -0,0 +1,87 @@
-+import { beforeAll, describe, expect, test } from 'bun:test';
-+import { createElement } from 'react';
+@@ -0,0 +1,94 @@
++import { describe, expect, test } from 'bun:test';
++import { createInstance } from 'i18next';
++import { createElement, type ReactElement } from 'react';
 +import { renderToStaticMarkup } from 'react-dom/server';
-+import i18n from '@/i18n';
++import { I18nextProvider } from 'react-i18next';
++import en from '@/i18n/locales/en.json';
 +import type { AuthFileItem, CodexQuotaState } from '@/types';
 +import { getQuotaCacheKey, getQuotaDisplayName } from '@/utils/quota/identity';
 +import { QuotaTimeline } from '@/features/quota/components/QuotaTimeline';
@@ -239,15 +241,20 @@ index 0000000000000000000000000000000000000000..4e9b73f3def7adc05441d27732093c9a
 +  'customization-test'
 +);
 +
-+beforeAll(async () => {
-+  await i18n.changeLanguage('en');
++const translations = createInstance();
++await translations.init({
++  lng: 'en',
++  resources: { en: { translation: en } },
++  react: { useSuspense: false },
 +});
++const render = (element: ReactElement) =>
++  renderToStaticMarkup(createElement(I18nextProvider, { i18n: translations }, element));
 +
 +describe('Codex customization boundaries', () => {
 +  test('uses one email label for Codex cards and lanes while retaining file identity', () => {
 +    expect(getQuotaDisplayName(file)).toBe(file.email!);
 +    expect(getQuotaCacheKey(file)).toBe(file.name);
-+    const markup = renderToStaticMarkup(
++    const markup = render(
 +      createElement(QuotaTimeline, {
 +        entries: [{ file, type: 'codex' }],
 +        quotaFor: () => quota,
@@ -262,9 +269,9 @@ index 0000000000000000000000000000000000000000..4e9b73f3def7adc05441d27732093c9a
 +  });
 +
 +  test('places priority after reset credits only when the quota host supplies file metadata', () => {
-+    const withFile = renderToStaticMarkup(createElement(CodexQuotaBody, { quota, classes, file }));
++    const withFile = render(createElement(CodexQuotaBody, { quota, classes, file }));
 +    expect(withFile).toMatch(/>2<\/span>[\s\S]*>Priority<\/span><span>3<\/span>/);
-+    const withoutFile = renderToStaticMarkup(createElement(CodexQuotaBody, { quota, classes }));
++    const withoutFile = render(createElement(CodexQuotaBody, { quota, classes }));
 +    expect(withoutFile).not.toContain('>Priority</span>');
 +  });
 +
