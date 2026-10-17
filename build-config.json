@@ -1,5 +1,5 @@
 {
   "upstream": "router-for-me/Cli-Proxy-API-Management-Center",
   "bun": "1.3.14",
-  "patch_base": "390718ecfec90b674fed474862e497522273e129"
+  "patch_base": "fe2963330f32a933f562282165f62ae52cf57145"
 }
