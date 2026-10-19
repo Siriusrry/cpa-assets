@@ -14,6 +14,7 @@ NAMES = {
     'api-usage-console': 'API Usage Console',
     'codex-window-keeper': 'Codex Window Keeper',
     'codex-quota-guard': 'Codex Quota Guard',
+    'codex-quota-notifier': 'Codex Quota Notifier',
 }
 
 
