@@ -188,6 +188,32 @@
       ]
     },
     {
+      "id": "codex-quota-notifier",
+      "name": "Codex Quota Notifier",
+      "description": "Codex Quota Notifier",
+      "author": "Siriusrry",
+      "version": "0.1.0",
+      "install": {
+        "type": "direct",
+        "artifacts": [
+          {
+            "goos": "linux",
+            "goarch": "amd64",
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-notifier/v0.1.0/codex-quota-notifier_0.1.0_linux_amd64.zip",
+            "sha256": "3eaf95638bcaa11fc460657851385d6947fcfcfcef8bb0337bd709f9c4279a34",
+            "size": 5264818
+          },
+          {
+            "goos": "linux",
+            "goarch": "arm64",
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-notifier/v0.1.0/codex-quota-notifier_0.1.0_linux_arm64.zip",
+            "sha256": "f5630202f2c03e57fc90e6a67c234d81633a8c613ba8dafd396448a67c520c98",
+            "size": 4890500
+          }
+        ]
+      }
+    },
+    {
       "id": "codex-window-keeper",
       "name": "Codex Window Keeper",
       "description": "Codex Window Keeper",
