@@ -6,26 +6,50 @@
       "name": "API Usage Console",
       "description": "API Usage Console",
       "author": "Siriusrry",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "install": {
         "type": "direct",
         "artifacts": [
           {
             "goos": "linux",
             "goarch": "amd64",
-            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/api-usage-console/v1.1.0/api-usage-console_1.1.0_linux_amd64.zip",
-            "sha256": "e49f3b8b0ab631348245f8c5186d811040e62b86852d9edae4a7f1a528f975e5",
-            "size": 8791509
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/api-usage-console/v1.1.1/api-usage-console_1.1.1_linux_amd64.zip",
+            "sha256": "3780f5efe668cdfb5762c5a97d7a9c0a4d145e128a83cb93298a2d89612d5292",
+            "size": 8793413
           },
           {
             "goos": "linux",
             "goarch": "arm64",
-            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/api-usage-console/v1.1.0/api-usage-console_1.1.0_linux_arm64.zip",
-            "sha256": "6ae75fdc8739f7e7d87099d45df0b5ee151428db03499eab56ea66a0a3603309",
-            "size": 8198608
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/api-usage-console/v1.1.1/api-usage-console_1.1.1_linux_arm64.zip",
+            "sha256": "709103d9bc54836efcf93117716cfc4f186b72c4c67c31f22eb017ddda86d333",
+            "size": 8199972
           }
         ]
-      }
+      },
+      "versions": [
+        {
+          "version": "1.1.0",
+          "install": {
+            "type": "direct",
+            "artifacts": [
+              {
+                "goos": "linux",
+                "goarch": "amd64",
+                "url": "https://github.com/Siriusrry/cpa-assets/releases/download/api-usage-console/v1.1.0/api-usage-console_1.1.0_linux_amd64.zip",
+                "sha256": "e49f3b8b0ab631348245f8c5186d811040e62b86852d9edae4a7f1a528f975e5",
+                "size": 8791509
+              },
+              {
+                "goos": "linux",
+                "goarch": "arm64",
+                "url": "https://github.com/Siriusrry/cpa-assets/releases/download/api-usage-console/v1.1.0/api-usage-console_1.1.0_linux_arm64.zip",
+                "sha256": "6ae75fdc8739f7e7d87099d45df0b5ee151428db03499eab56ea66a0a3603309",
+                "size": 8198608
+              }
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "codex-quota-guard",
