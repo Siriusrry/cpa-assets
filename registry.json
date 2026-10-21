@@ -32,27 +32,49 @@
       "name": "Codex Quota Guard",
       "description": "Codex Quota Guard",
       "author": "Siriusrry",
-      "version": "0.1.8",
+      "version": "0.1.9",
       "install": {
         "type": "direct",
         "artifacts": [
           {
             "goos": "linux",
             "goarch": "amd64",
-            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-guard/v0.1.8/codex-quota-guard_0.1.8_linux_amd64.zip",
-            "sha256": "7a596f9f3c9049ae78fa8ed594321686eaab3adb2845e31d5da1f99ec01ff130",
-            "size": 5077904
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-guard/v0.1.9/codex-quota-guard_0.1.9_linux_amd64.zip",
+            "sha256": "5ea747dcb7b414c230e9ade3f654c3675a5728e3b76a7758bfed7a674b40de4b",
+            "size": 5080955
           },
           {
             "goos": "linux",
             "goarch": "arm64",
-            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-guard/v0.1.8/codex-quota-guard_0.1.8_linux_arm64.zip",
-            "sha256": "ab333ebbe986643f22d29c871e0b5e3330390eaaa9da865073ca7c79a2c311bc",
-            "size": 4705442
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-guard/v0.1.9/codex-quota-guard_0.1.9_linux_arm64.zip",
+            "sha256": "9d8989ff3cd75e51f5c04372cdf5ed1d30d8ec3c7a091b35c68a0963f17f654f",
+            "size": 4709603
           }
         ]
       },
       "versions": [
+        {
+          "version": "0.1.8",
+          "install": {
+            "type": "direct",
+            "artifacts": [
+              {
+                "goos": "linux",
+                "goarch": "amd64",
+                "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-guard/v0.1.8/codex-quota-guard_0.1.8_linux_amd64.zip",
+                "sha256": "7a596f9f3c9049ae78fa8ed594321686eaab3adb2845e31d5da1f99ec01ff130",
+                "size": 5077904
+              },
+              {
+                "goos": "linux",
+                "goarch": "arm64",
+                "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-guard/v0.1.8/codex-quota-guard_0.1.8_linux_arm64.zip",
+                "sha256": "ab333ebbe986643f22d29c871e0b5e3330390eaaa9da865073ca7c79a2c311bc",
+                "size": 4705442
+              }
+            ]
+          }
+        },
         {
           "version": "0.1.7",
           "install": {
