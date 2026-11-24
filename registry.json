@@ -502,27 +502,49 @@
       "name": "Codex Quota Monitor",
       "description": "Codex Quota Monitor",
       "author": "Siriusrry",
-      "version": "0.2.25",
+      "version": "0.2.26",
       "install": {
         "type": "direct",
         "artifacts": [
           {
             "goos": "linux",
             "goarch": "amd64",
-            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-notifier/v0.2.25/codex-quota-notifier_0.2.25_linux_amd64.zip",
-            "sha256": "73631e4441f147e6d0e538474a173b60fe2e103f73d941d3555cdc462e681369",
-            "size": 6211416
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-notifier/v0.2.26/codex-quota-notifier_0.2.26_linux_amd64.zip",
+            "sha256": "0d80fb0420e8e3a967cd234a7e31074730192eba8e08d2aae85023e3c5115505",
+            "size": 6223776
           },
           {
             "goos": "linux",
             "goarch": "arm64",
-            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-notifier/v0.2.25/codex-quota-notifier_0.2.25_linux_arm64.zip",
-            "sha256": "35f448e01a8b4cea1f8bb053c6b99fcfd14c830f78477130e60fa8480e687957",
-            "size": 5648883
+            "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-notifier/v0.2.26/codex-quota-notifier_0.2.26_linux_arm64.zip",
+            "sha256": "4cc1a48d8c0ac38305655298b1e1faaa2dfd2c4e00b5cb0cce2375cd96e89309",
+            "size": 5659139
           }
         ]
       },
       "versions": [
+        {
+          "version": "0.2.25",
+          "install": {
+            "type": "direct",
+            "artifacts": [
+              {
+                "goos": "linux",
+                "goarch": "amd64",
+                "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-notifier/v0.2.25/codex-quota-notifier_0.2.25_linux_amd64.zip",
+                "sha256": "73631e4441f147e6d0e538474a173b60fe2e103f73d941d3555cdc462e681369",
+                "size": 6211416
+              },
+              {
+                "goos": "linux",
+                "goarch": "arm64",
+                "url": "https://github.com/Siriusrry/cpa-assets/releases/download/codex-quota-notifier/v0.2.25/codex-quota-notifier_0.2.25_linux_arm64.zip",
+                "sha256": "35f448e01a8b4cea1f8bb053c6b99fcfd14c830f78477130e60fa8480e687957",
+                "size": 5648883
+              }
+            ]
+          }
+        },
         {
           "version": "0.2.24",
           "install": {
